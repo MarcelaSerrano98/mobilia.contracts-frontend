@@ -8,7 +8,7 @@ Prueba técnica de desarrollo para **Mobilia Software**.
 | | |
 |---|---|
 | **Repositorio back-end** | https://github.com/MarcelaSerrano98/mobilia.contracts-backend |
-| **Repositorio front-end** | _(este)_ |
+| **Repositorio front-end** | https://github.com/MarcelaSerrano98/mobilia.contracts-frontend |
 
 ---
 
@@ -52,8 +52,8 @@ Un campo de texto y un botón. Al buscar, consume
 
 ```bash
 # 1. Clonar e instalar
-git clone <url-de-este-repositorio>
-cd contracts-frontend
+git clone https://github.com/MarcelaSerrano98/mobilia.contracts-frontend.git
+cd mobilia.contracts-frontend
 npm install
 
 # 2. Configurar la URL del back-end
@@ -113,6 +113,35 @@ en `components/`. Ningún componente llama a `fetch` directamente.
 ---
 
 ## Decisiones técnicas
+
+### `strict: true` en TypeScript
+
+El scaffold de Vite **no** lo activa, y sin él TypeScript pierde la mitad de su
+utilidad: con `strictNullChecks` desactivado, un tipo como `Party | null` no
+significa nada y el compilador acepta `contract.tenant.fullName` sin protestar,
+para fallar después en tiempo de ejecución.
+
+Con `strict` activado, ese mismo código no compila:
+
+```
+error TS18047: 'contract.tenant' is possibly 'null'.
+```
+
+Se añade además `noUncheckedIndexedAccess`, que hace que `array[0]` tenga el
+tipo `T | undefined` — que es lo que realmente devuelve si el array está vacío.
+
+### El puerto del servidor de desarrollo está fijado
+
+`5173` es el valor por defecto de Vite, pero dejarlo implícito crearía una
+dependencia oculta entre los dos repositorios: el back-end autoriza ese origen
+concreto en su configuración de CORS. Si el puerto estuviera ocupado, Vite
+arrancaría en otro y el navegador bloquearía todas las peticiones, con un error
+difícil de relacionar con la causa.
+
+Por eso se declara `port: 5173` junto con `strictPort: true`, que hace que Vite
+**falle al arrancar** si el puerto no está libre, en lugar de cambiarlo en
+silencio. Un error inmediato y explícito es preferible a una pantalla que no
+carga datos sin decir por qué.
 
 ### Cancelación de peticiones (`AbortController`)
 

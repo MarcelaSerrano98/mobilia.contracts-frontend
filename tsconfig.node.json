@@ -13,6 +13,23 @@
     "moduleDetection": "force",
     "noEmit": true,
 
+    /* Comprobaciones estrictas de tipos.
+
+       `strict` activa de golpe un grupo de comprobaciones, y la mas importante
+       aqui es `strictNullChecks`. Sin ella, un tipo como `Party | null` no
+       significa nada: TypeScript aceptaria `contract.tenant.fullName` sin
+       protestar y la pagina fallaria en tiempo de ejecucion. Con ella activada,
+       el compilador obliga a tratar el caso nulo de forma explicita.
+
+       Incluye ademas `noImplicitAny`, que impide que un parametro sin tipo se
+       convierta en `any` en silencio y desactive toda comprobacion. */
+    "strict": true,
+
+    /* Obliga a comprobar el acceso por indice: `array[0]` pasa a ser
+       `T | undefined`, que es lo que realmente devuelve en tiempo de ejecucion
+       si el array esta vacio. */
+    "noUncheckedIndexedAccess": true,
+
     /* Linting */
     "noUnusedLocals": true,
     "noUnusedParameters": true,
