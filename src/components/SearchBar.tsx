@@ -1,4 +1,5 @@
 import { useId, useState, type FormEvent, type KeyboardEvent } from 'react';
+import { MIN_QUERY_LENGTH } from '../api/contractsApi';
 import {
   useContractSuggestions,
   type Suggestion,
@@ -9,9 +10,6 @@ interface SearchBarProps {
   onSearch: (query: string) => void;
   isSearching: boolean;
 }
-
-/** Longitud minima que exige el back-end. Se replica para avisar antes. */
-const MIN_QUERY_LENGTH = 2;
 
 /**
  * Campo de texto, desplegable de coincidencias y boton de buscar.

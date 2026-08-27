@@ -9,7 +9,6 @@ Prueba técnica de desarrollo para **Mobilia Software**.
 |---|---|
 | **Repositorio back-end** | https://github.com/MarcelaSerrano98/mobilia.contracts-backend |
 | **Repositorio front-end** | https://github.com/MarcelaSerrano98/mobilia.contracts-frontend |
-| **Guía técnica** | [GUIA-TECNICA.md](GUIA-TECNICA.md) — cómo está construido y por qué |
 
 ---
 
@@ -39,7 +38,7 @@ coincidencias y señala **en qué campo** está el texto; al buscar, consume
 | Lenguaje | TypeScript | El contrato de la API queda tipado: si el back-end cambia un campo, lo avisa el compilador y no la pantalla en blanco |
 | Estilos | CSS plano con variables | Sin dependencias extra; el proyecto es pequeño y no justifica un framework de estilos |
 | Tipografía | Google Fonts por `<link>` | Tres familias sin añadir nada a `package.json`, y con pila de reserva si no hay red |
-| Peticiones | `fetch` nativo | No hace falta añadir Axios para una única petición GET |
+| Peticiones | `fetch` nativo | Ya trae cancelación por `AbortSignal`, que es lo único que hacía falta; Axios no aportaría nada aquí |
 
 ---
 
