@@ -5,24 +5,10 @@ interface ContractsTableProps {
   contracts: ContractSearchResult[];
 }
 
-/**
- * Tabla de resultados con las columnas que exige el enunciado.
- *
- * <p>IMPORTANTE (estudiar) — Se usa una tabla HTML real y no una rejilla de
- * {@code <div>}. Con CSS Grid se consigue el mismo dibujo, pero se pierde lo
- * que no se ve: {@code <th scope="col">} hace que un lector de pantalla, al
- * llegar a una celda cualquiera, anuncie antes a que columna pertenece. Sin
- * eso, quien navega a oidas escucha «Juan Carlos Perez Gomez» sin saber si es
- * el arrendatario o un deudor solidario, que es justo el dato que la pantalla
- * existe para dar.</p>
- *
- * <p>El {@code <caption>} nombra la tabla entera y se oculta visualmente con
- * la clase {@code sr-only}: sigue disponible para las tecnologias de asistencia
- * sin ocupar espacio en pantalla.</p>
- *
- * <p>Las clases van en cada {@code <th>} y {@code <td>} en lugar de apoyarse en
- * selectores de elemento: mantiene toda la hoja de estilos en un unico nivel de
- * especificidad y evita que una regla de tabla pise sin querer a otra.</p>
+/*
+ * IMPORTANTE: tabla real y no una rejilla de <div>. Con `scope="col"` el lector
+ * de pantalla dice a que columna pertenece cada celda; sin eso se oye un nombre
+ * sin saber si es el arrendatario o un deudor, que es el dato que importa.
  */
 export function ContractsTable({ contracts }: ContractsTableProps) {
   return (

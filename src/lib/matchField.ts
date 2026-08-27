@@ -1,52 +1,30 @@
 import type { ContractSearchResult, Party } from '../types/contract';
 
-/**
- * Averigua por que campo coincide un contrato con el texto buscado.
- *
- * <p>El back-end devuelve los contratos que contienen el texto, pero no dice
- * en cual de los campos lo encontro. Se recalcula aqui con las mismas reglas
- * —sin mayusculas ni tildes— para poder ensennar en el desplegable el dato
- * concreto que ha coincidido, y no solo el contrato al que pertenece.</p>
+/*
+ * El back-end devuelve los contratos que contienen el texto pero no dice en que
+ * campo lo encontro, asi que la coincidencia se recalcula aqui con sus mismas
+ * reglas: sin mayusculas y sin tildes.
  */
 export interface FieldMatch {
-  /** Como se llama el campo para quien mira la pantalla. */
   field: string;
-  /** Valor completo del campo, para pintarlo con el fragmento resaltado. */
   value: string;
-  /** Persona a la que pertenece el dato, cuando el campo es un documento. */
   person?: string;
-  /**
-   * True cuando el valor es un dato y no prosa —un codigo, un documento—.
-   *
-   * Decide con que letra se pinta: el sistema reserva la monoespaciada para
-   * lo que se coteja caracter a caracter, y un nombre o una direccion no
-   * entran en esa categoria.
-   */
+  // Un codigo o un documento, que el disenno pinta en monoespaciada.
   isData?: boolean;
 }
 
-/**
- * IMPORTANTE (estudiar) — Por que no basta con normalizar los dos textos.
- *
- * <p>Para comparar «martin» con «Martin» basta bajar a minusculas y quitar
- * tildes. Pero aqui ademas hay que <em>subrayar</em> el trozo que coincide, y
- * eso exige saber en que posicion del texto <em>original</em> empieza.</p>
- *
- * <p>El problema es que normalizar cambia la longitud. {@code 'í'.normalize
- * ('NFD')} devuelve dos caracteres —la i y la tilde suelta— y al borrar la
- * tilde el texto encoge. En «Martínez», el indice 5 del texto normalizado ya
- * no es el indice 5 del original, y el subrayado caeria corrido una letra.</p>
- *
- * <p>La solucion es normalizar caracter a caracter guardando, por cada letra
- * del resultado, de que posicion del original venia. El bucle interior existe
- * porque un solo caracter puede producir varios: la eñe se descompone en n mas
- * tilde, y por eso escribir «nunez» encuentra «Núñez».</p>
+/*
+ * IMPORTANTE: normalizar acorta el texto —«í» se descompone en dos caracteres y
+ * pierde uno al quitar la tilde—, asi que el mapa guarda de que posicion del
+ * original viene cada letra. Sin el, el subrayado caeria corrido.
  */
 function normalizeWithMap(text: string): { normalized: string; map: number[] } {
   const map: number[] = [];
   let normalized = '';
 
   for (let index = 0; index < text.length; index += 1) {
+    // Un caracter puede dar varios: la enne se descompone en n mas tilde, y
+    // por eso «nunez» encuentra «Núñez».
     const folded = text[index]!
       .toLowerCase()
       .normalize('NFD')
@@ -61,19 +39,24 @@ function normalizeWithMap(text: string): { normalized: string; map: number[] } {
   return { normalized, map };
 }
 
-/** Deja el texto listo para comparar: sin mayusculas y sin tildes. */
+/**
+ * @returns el texto en minusculas y sin tildes, listo para comparar
+ */
 export function normalize(text: string): string {
   return normalizeWithMap(text).normalized;
 }
 
-/** Devuelve true si el valor contiene el texto buscado. */
 function contains(value: string, query: string): boolean {
   return normalize(value).includes(normalize(query));
 }
 
 /**
- * Parte un valor en tres: lo que va antes del fragmento buscado, el fragmento
- * y lo que va despues. Si no aparece, devuelve el valor entero como «antes».
+ * Parte un valor por el fragmento buscado, para poder resaltarlo.
+ *
+ * @param value texto completo del campo, con sus tildes
+ * @param query texto buscado, que puede venir sin ellas
+ * @returns lo anterior al fragmento, el fragmento y lo posterior; si no
+ *   aparece, el valor entero como primer elemento
  */
 export function splitMatch(
   value: string,
@@ -93,7 +76,6 @@ export function splitMatch(
   return [value.slice(0, start), value.slice(start, end), value.slice(end)];
 }
 
-/** Busca el texto en una persona: primero el nombre, luego el documento. */
 function matchParty(party: Party, query: string, role: string): FieldMatch | null {
   if (contains(party.fullName, query)) {
     return { field: role, value: party.fullName };
@@ -112,16 +94,16 @@ function matchParty(party: Party, query: string, role: string): FieldMatch | nul
 }
 
 /**
- * Devuelve el primer campo del contrato que contiene el texto.
+ * Localiza el campo del contrato que contiene el texto buscado.
  *
- * <p>El orden no es casual: va de lo mas identificativo —el codigo— a lo mas
- * general. Si alguien escribe un codigo completo, lo que quiere ver resaltado
- * es el codigo, no la direccion que tambien lo contenga por casualidad.</p>
+ * <p>Se recorren de lo mas identificativo a lo mas general: quien escribe un
+ * codigo entero espera ver resaltado el codigo, no una direccion que lo
+ * contenga por casualidad.</p>
  *
- * <p>Devuelve {@code null} cuando el back-end ha encontrado el contrato por un
- * campo que la respuesta no incluye —el email de una persona—: en ese caso el
- * desplegable ensenna el contrato sin resaltar nada, en lugar de inventarse
- * una coincidencia.</p>
+ * @param contract contrato devuelto por el servicio
+ * @param query texto buscado
+ * @returns el campo coincidente, o null si el servicio lo encontro por el
+ *   email, que la respuesta no incluye
  */
 export function findMatch(
   contract: ContractSearchResult,
