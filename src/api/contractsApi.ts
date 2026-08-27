@@ -4,27 +4,14 @@ import type {
   PagedResponse,
 } from '../types/contract';
 
-/**
- * URL base de la API.
- *
- * Se lee de una variable de entorno de Vite en lugar de escribirse en el
- * codigo: el valor cambia entre desarrollo y produccion, y una URL fija
- * obligaria a recompilar para desplegar.
- */
+// En una variable de entorno para no recompilar al cambiar de entorno.
 const API_BASE_URL: string =
   import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080';
 
-/**
- * IMPORTANTE (estudiar) — Por que existe esta clase y no se usa Error.
- *
- * <p>El back-end devuelve mensajes utiles y en castellano («El texto de
- * busqueda debe tener al menos 2 caracteres»). Envolverlos en un tipo propio
- * que ademas lleva el {@code status} permite dos cosas: mostrar ese mensaje
- * tal cual en pantalla, y distinguir mas adelante un fallo del servicio (500)
- * de un error de la peticion (400) sin volver a leer el cuerpo.</p>
- *
- * <p>La alternativa —lanzar {@code Error} con un texto generico— convierte
- * todos los fallos en el mismo, y obliga a la persona a adivinar.</p>
+/*
+ * IMPORTANTE: conserva el mensaje del back-end, que ya viene redactado en
+ * castellano y se muestra tal cual, y el status para poder distinguir un error
+ * de la peticion de una caida del servicio.
  */
 export class ApiError extends Error {
   readonly status: number;
@@ -36,13 +23,9 @@ export class ApiError extends Error {
   }
 }
 
-/**
- * Longitud minima que exige el servicio para el texto de busqueda.
- *
- * <p>Se declara aqui, junto al cliente HTTP, porque es una regla del back-end
- * y no de la pantalla: si manana pasara a exigir tres caracteres, este es el
- * unico sitio que habria que tocar. La interfaz la replica para avisar antes
- * de gastar una peticion que ya se sabe que va a fallar con un 400.</p>
+/*
+ * Regla del back-end, no de la pantalla: vive aqui para que haya un unico sitio
+ * que tocar si el servicio cambiara de criterio.
  */
 export const MIN_QUERY_LENGTH = 2;
 
@@ -50,14 +33,21 @@ interface SearchParams {
   query: string;
   page?: number;
   size?: number;
-  /** Permite cancelar la peticion si llega una busqueda mas reciente. */
   signal?: AbortSignal;
 }
 
 /**
- * Consulta los contratos que contienen el texto indicado.
+ * Consulta los contratos que contienen el texto indicado en el nombre,
+ * apellidos, documento o email de sus partes, en la direccion del inmueble o
+ * en el codigo del contrato.
  *
- * @throws {ApiError} si el back-end responde con un codigo de error
+ * @param query texto a buscar; el servicio exige {@link MIN_QUERY_LENGTH}
+ * @param page pagina solicitada, empezando en cero
+ * @param size numero maximo de contratos por pagina
+ * @param signal permite abortar la peticion desde quien la lanzo
+ * @returns la pagina de contratos coincidentes
+ * @throws {ApiError} si el servicio responde con un codigo de error
+ * @throws {DOMException} con nombre `AbortError` si se aborta la peticion
  */
 export async function searchContracts({
   query,
@@ -83,12 +73,8 @@ export async function searchContracts({
   return (await response.json()) as PagedResponse<ContractSearchResult>;
 }
 
-/**
- * Extrae el mensaje de un error de la API.
- *
- * Se protege con try/catch porque una respuesta de error no siempre trae un
- * cuerpo JSON valido (por ejemplo, un 502 de un proxy intermedio).
- */
+// Una respuesta de error no siempre trae JSON valido: un 502 de un proxy
+// intermedio devuelve HTML.
 async function readErrorMessage(response: Response): Promise<string> {
   try {
     const body = (await response.json()) as ApiErrorBody;
@@ -96,7 +82,7 @@ async function readErrorMessage(response: Response): Promise<string> {
       return body.message;
     }
   } catch {
-    // El cuerpo no era JSON: se recurre al mensaje generico de abajo.
+    // Sin cuerpo aprovechable; queda el mensaje generico de abajo.
   }
   return `El servicio respondio con un error (${response.status}).`;
 }

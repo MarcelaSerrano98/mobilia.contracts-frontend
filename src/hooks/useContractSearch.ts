@@ -2,23 +2,22 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ApiError, searchContracts } from '../api/contractsApi';
 import type { ContractSearchResult, PagedResponse } from '../types/contract';
 
-/** Estados por los que pasa una busqueda. */
 export type SearchStatus = 'idle' | 'loading' | 'success' | 'error';
 
 interface UseContractSearchResult {
   status: SearchStatus;
   results: PagedResponse<ContractSearchResult> | null;
   errorMessage: string | null;
-  /** Texto de la ultima busqueda lanzada, para los mensajes en pantalla. */
   lastQuery: string;
   search: (query: string) => void;
 }
 
 /**
- * Encapsula el ciclo de vida de una busqueda: peticion, estados y errores.
+ * Ciclo de vida de una busqueda de contratos.
  *
- * <p>Extraerlo a un hook mantiene los componentes centrados en pintar y permite
- * reutilizar la logica si mannana hiciera falta buscar desde otra pantalla.</p>
+ * @returns el estado de la busqueda, sus resultados, el mensaje de error si
+ *   fallo, el ultimo texto buscado y la funcion que lanza una busqueda nueva
+ *   cancelando la anterior
  */
 export function useContractSearch(): UseContractSearchResult {
   const [status, setStatus] = useState<SearchStatus>('idle');
@@ -26,22 +25,10 @@ export function useContractSearch(): UseContractSearchResult {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [lastQuery, setLastQuery] = useState('');
 
-  /**
-   * IMPORTANTE (estudiar) — La condicion de carrera de todo buscador.
-   *
-   * <p>Si se lanzan dos busquedas seguidas y la primera tarda mas que la
-   * segunda, su respuesta llega despues y sobreescribe en pantalla un
-   * resultado mas reciente. La persona ve entonces los resultados de lo que
-   * escribio antes, sin ninguna pista de que ha pasado.</p>
-   *
-   * <p>No es un problema de velocidad de la red sino de orden de llegada: dos
-   * peticiones independientes no garantizan responder en el orden en que se
-   * enviaron. Guardar la peticion en curso y abortarla al lanzar la siguiente
-   * hace que solo pueda haber una viva, y con ella una sola respuesta capaz
-   * de escribir en el estado.</p>
-   *
-   * <p>Se usa {@code useRef} y no {@code useState} porque cambiar de peticion
-   * no tiene que repintar nada: es un dato de trabajo, no algo que se vea.</p>
+  /*
+   * IMPORTANTE: dos peticiones no responden necesariamente en el orden en que
+   * salieron, asi que una busqueda lenta puede pisar el resultado de otra mas
+   * reciente. Abortar la anterior deja siempre una sola respuesta viva.
    */
   const inFlightRequest = useRef<AbortController | null>(null);
 
@@ -61,10 +48,8 @@ export function useContractSearch(): UseContractSearchResult {
         setStatus('success');
       })
       .catch((error: unknown) => {
-        // IMPORTANTE (estudiar): abortar una peticion hace que su promesa se
-        // rechace con AbortError. Sin este filtro, cancelar una busqueda se
-        // mostraria como un error en pantalla, y cancelar es justo lo que
-        // hace el codigo de arriba en cada tecleo.
+        // Abortar rechaza la promesa: sin este filtro, cancelar una busqueda
+        // se veria en pantalla como un fallo.
         if (error instanceof DOMException && error.name === 'AbortError') {
           return;
         }
@@ -78,7 +63,7 @@ export function useContractSearch(): UseContractSearchResult {
       });
   }, []);
 
-  // Cancela la peticion pendiente si el componente se desmonta.
+  // Evita escribir estado de un componente que ya no esta montado.
   useEffect(() => () => inFlightRequest.current?.abort(), []);
 
   return { status, results, errorMessage, lastQuery, search };

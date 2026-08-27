@@ -3,61 +3,47 @@ import { MIN_QUERY_LENGTH, searchContracts } from '../api/contractsApi';
 import { findMatch, type FieldMatch } from '../lib/matchField';
 import type { ContractSearchResult } from '../types/contract';
 
-/** Una linea del desplegable: el contrato y el dato por el que ha salido. */
 export interface Suggestion {
   contract: ContractSearchResult;
-  /** Campo que contiene el texto, o null si la respuesta no lo incluye. */
+  // null cuando el back-end encontro el contrato por un campo que no devuelve.
   match: FieldMatch | null;
 }
 
-/** Cuantas lineas caben en el desplegable sin convertirlo en otra tabla. */
 const MAX_SUGGESTIONS = 6;
 
-/**
- * Espera a que la persona deje de teclear antes de preguntar.
- *
- * Sin esta pausa, escribir «martinez» lanzaria ocho peticiones para ensennar
- * solo el resultado de la ultima.
- */
+// Sin esta pausa, escribir «martinez» lanzaria ocho peticiones para ensennar
+// solo el resultado de la ultima.
 const DEBOUNCE_MS = 250;
 
 interface UseContractSuggestionsResult {
   suggestions: Suggestion[];
-  /** True cuando ya se ha respondido y no habia ningun contrato. */
   isEmpty: boolean;
 }
 
-/** Lo ultimo que respondio el servicio, junto al texto que lo pidio. */
 interface SuggestionsFor {
   query: string;
   items: Suggestion[];
 }
 
 /**
- * Consulta el mismo servicio que la busqueda, pero de a pocos y mientras se
- * escribe, para alimentar el desplegable.
+ * Coincidencias que alimentan el desplegable mientras se escribe.
  *
- * <p>Va aparte de {@code useContractSearch} a proposito: el desplegable no
- * debe tocar el estado de la busqueda confirmada, ni dejar la tabla en blanco
- * porque una sugerencia haya fallado. Si una peticion de sugerencias se
- * rompe, el panel se cierra sin decir nada y el error, si persiste, lo cuenta
- * la busqueda de verdad al pulsar Buscar.</p>
+ * <p>Va aparte de {@link useContractSearch} para que un fallo de las
+ * sugerencias no borre la tabla ya visible: aqui el error se traga y, si
+ * persiste, lo cuenta la busqueda al pulsar Buscar.</p>
  *
- * <p>IMPORTANTE (estudiar) — Se guarda el texto que pidio cada respuesta
- * junto a la respuesta misma. Sirve para decidir <em>durante el render</em>
- * si lo que hay en memoria vale para lo que hay escrito ahora: sin esa
- * comprobacion, al escribir una letra mas el panel ensennaria durante un
- * instante las coincidencias de la palabra anterior.</p>
- *
- * <p>Es la alternativa a reaccionar con un efecto que vacie la lista cada vez
- * que cambia el texto. Un efecto asi provoca un render de mas y, sobre todo,
- * describe el estado en dos sitios: lo que hay guardado y lo que el efecto
- * hara con ello. Derivarlo en el render deja una sola verdad —«esta respuesta
- * es de este texto»— y ningun momento intermedio en que ambas discrepen.</p>
+ * @param query texto que se esta escribiendo, sin recortar
+ * @returns las coincidencias de ese texto, vacias mientras no las haya, y si
+ *   el servicio ya respondio sin ningun contrato
  */
 export function useContractSuggestions(
   query: string,
 ): UseContractSuggestionsResult {
+  /*
+   * IMPORTANTE: se guarda junto al texto que la pidio para poder descartarla
+   * en el render. Vaciarla desde un efecto llega tarde, y el panel ensennaria
+   * un instante las coincidencias de la palabra anterior.
+   */
   const [answer, setAnswer] = useState<SuggestionsFor | null>(null);
 
   const text = query.trim();
@@ -88,7 +74,7 @@ export function useContractSuggestions(
           });
         })
         .catch((error: unknown) => {
-          // La cancelacion es lo normal aqui: llega una tecla mas.
+          // Cancelar es lo normal aqui: ha llegado otra tecla.
           if (error instanceof DOMException && error.name === 'AbortError') {
             return;
           }
@@ -96,7 +82,6 @@ export function useContractSuggestions(
         });
     }, DEBOUNCE_MS);
 
-    // Cancela tanto la espera como la peticion si el texto cambia antes.
     return () => {
       clearTimeout(timer);
       controller.abort();

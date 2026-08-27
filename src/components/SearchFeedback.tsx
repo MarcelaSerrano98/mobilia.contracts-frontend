@@ -7,27 +7,14 @@ interface SearchFeedbackProps {
   totalResults: number;
 }
 
-/**
- * Mensaje que acompanna a la tabla segun el estado de la busqueda.
+/*
+ * Los cuatro estados se cubren de forma explicita: una tabla vacia sin mensaje
+ * deja sin saber si fallo la conexion o si no hay resultados. El estado inicial
+ * calla porque la pista del campo ya explica por donde se busca.
  *
- * <p>Cubre de forma explicita los cuatro estados —inicial, cargando, sin
- * resultados y error— en lugar de mostrar una tabla vacia sin explicacion,
- * que deja a la persona sin saber si fallo algo o simplemente no hay datos.</p>
- *
- * <p>El estado inicial no dice nada: la tira de rotulos bajo el campo ya
- * explica por donde se puede buscar, y repetirlo aqui seria pedirle a la
- * persona que lea dos veces lo mismo antes de escribir.</p>
- *
- * <p>IMPORTANTE (estudiar) — {@code aria-live="polite"} hace que el lector de
- * pantalla anuncie este bloque cuando su contenido cambia, aunque el foco este
- * en otro sitio. Sin el, quien busca a oidas pulsa Buscar y no recibe ninguna
- * senal: la tabla aparece en pantalla, pero nada se lo dice.</p>
- *
- * <p>El valor {@code polite} espera a que termine de leerse lo que estuviera
- * en curso, frente a {@code assertive}, que interrumpe. Para un recuento de
- * resultados, interrumpir seria desproporcionado. El mensaje de error si lleva
- * ademas {@code role="alert"}, que si es asertivo: un fallo no puede esperar
- * su turno.</p>
+ * IMPORTANTE: `aria-live` anuncia el cambio aunque el foco este en otro sitio.
+ * Es `polite` para no interrumpir por un recuento; el error lleva ademas
+ * `role="alert"`, que si interrumpe.
  */
 export function SearchFeedback({
   status,

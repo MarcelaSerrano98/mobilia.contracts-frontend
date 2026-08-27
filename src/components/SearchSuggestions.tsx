@@ -3,9 +3,8 @@ import { splitMatch } from '../lib/matchField';
 
 interface SearchSuggestionsProps {
   suggestions: Suggestion[];
-  /** Texto que se esta buscando, para resaltarlo dentro de cada linea. */
   query: string;
-  /** Indice de la linea recorrida con el teclado, o -1 si no hay ninguna. */
+  // -1 cuando no hay ninguna linea recorrida con el teclado.
   activeIndex: number;
   listboxId: string;
   optionId: (index: number) => string;
@@ -13,13 +12,10 @@ interface SearchSuggestionsProps {
   onHover: (index: number) => void;
 }
 
-/**
- * Panel de coincidencias que cuelga del campo de busqueda.
- *
- * <p>Cada linea ensenna el dato concreto que contiene el texto —el nombre, la
- * direccion, el documento— con el fragmento resaltado, y a su derecha el
- * contrato al que pertenece. Es la diferencia entre «hay dos resultados» y
- * «el texto esta en el apellido de la propietaria de este contrato».</p>
+/*
+ * Cada linea ensenna el dato que ha coincidido y en que papel figura, no solo
+ * el contrato: es la diferencia entre «hay dos resultados» y «el texto esta en
+ * el apellido de la propietaria de este contrato».
  */
 export function SearchSuggestions({
   suggestions,
@@ -45,8 +41,8 @@ export function SearchSuggestions({
             }
             role="option"
             aria-selected={index === activeIndex}
-            /* En mousedown el campo aun no ha perdido el foco: asi el panel no
-               se cierra antes de que el clic llegue a su destino. */
+            // En mousedown el campo aun no ha perdido el foco, asi que el
+            // panel no se cierra antes de que el clic llegue.
             onMouseDown={(event) => event.preventDefault()}
             onMouseEnter={() => onHover(index)}
             onClick={() => onSelect(suggestion)}

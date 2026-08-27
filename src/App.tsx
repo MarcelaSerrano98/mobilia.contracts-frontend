@@ -4,13 +4,6 @@ import { SearchFeedback } from './components/SearchFeedback';
 import { useContractSearch } from './hooks/useContractSearch';
 import './App.css';
 
-/**
- * Pantalla de busqueda de contratos.
- *
- * <p>El componente solo compone: la logica de la peticion vive en
- * {@code useContractSearch} y cada pieza de la interfaz en su propio
- * componente.</p>
- */
 export default function App() {
   const { status, results, errorMessage, lastQuery, search } = useContractSearch();
 
