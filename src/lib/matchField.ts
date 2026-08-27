@@ -26,12 +26,21 @@ export interface FieldMatch {
 }
 
 /**
- * Pasa el texto a minusculas y le quita las tildes, conservando la
- * correspondencia con las posiciones del texto original.
+ * IMPORTANTE (estudiar) — Por que no basta con normalizar los dos textos.
  *
- * <p>Hace falta el mapa porque la normalizacion cambia la longitud: «Martinez»
- * con tilde ocupa una posicion mas en su forma descompuesta, y sin el mapa el
- * fragmento resaltado se desplazaria una letra.</p>
+ * <p>Para comparar «martin» con «Martin» basta bajar a minusculas y quitar
+ * tildes. Pero aqui ademas hay que <em>subrayar</em> el trozo que coincide, y
+ * eso exige saber en que posicion del texto <em>original</em> empieza.</p>
+ *
+ * <p>El problema es que normalizar cambia la longitud. {@code 'í'.normalize
+ * ('NFD')} devuelve dos caracteres —la i y la tilde suelta— y al borrar la
+ * tilde el texto encoge. En «Martínez», el indice 5 del texto normalizado ya
+ * no es el indice 5 del original, y el subrayado caeria corrido una letra.</p>
+ *
+ * <p>La solucion es normalizar caracter a caracter guardando, por cada letra
+ * del resultado, de que posicion del original venia. El bucle interior existe
+ * porque un solo caracter puede producir varios: la eñe se descompone en n mas
+ * tilde, y por eso escribir «nunez» encuentra «Núñez».</p>
  */
 function normalizeWithMap(text: string): { normalized: string; map: number[] } {
   const map: number[] = [];

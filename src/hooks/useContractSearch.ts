@@ -27,11 +27,21 @@ export function useContractSearch(): UseContractSearchResult {
   const [lastQuery, setLastQuery] = useState('');
 
   /**
-   * Referencia a la peticion en curso.
+   * IMPORTANTE (estudiar) — La condicion de carrera de todo buscador.
    *
-   * Sin ella se produciria una condicion de carrera: si se lanzan dos busquedas
-   * seguidas y la primera tarda mas que la segunda, su respuesta llegaria
-   * despues y sobreescribiria en pantalla un resultado mas reciente.
+   * <p>Si se lanzan dos busquedas seguidas y la primera tarda mas que la
+   * segunda, su respuesta llega despues y sobreescribe en pantalla un
+   * resultado mas reciente. La persona ve entonces los resultados de lo que
+   * escribio antes, sin ninguna pista de que ha pasado.</p>
+   *
+   * <p>No es un problema de velocidad de la red sino de orden de llegada: dos
+   * peticiones independientes no garantizan responder en el orden en que se
+   * enviaron. Guardar la peticion en curso y abortarla al lanzar la siguiente
+   * hace que solo pueda haber una viva, y con ella una sola respuesta capaz
+   * de escribir en el estado.</p>
+   *
+   * <p>Se usa {@code useRef} y no {@code useState} porque cambiar de peticion
+   * no tiene que repintar nada: es un dato de trabajo, no algo que se vea.</p>
    */
   const inFlightRequest = useRef<AbortController | null>(null);
 
@@ -51,7 +61,10 @@ export function useContractSearch(): UseContractSearchResult {
         setStatus('success');
       })
       .catch((error: unknown) => {
-        // Una peticion cancelada no es un fallo: la reemplazo otra mas reciente.
+        // IMPORTANTE (estudiar): abortar una peticion hace que su promesa se
+        // rechace con AbortError. Sin este filtro, cancelar una busqueda se
+        // mostraria como un error en pantalla, y cancelar es justo lo que
+        // hace el codigo de arriba en cada tecleo.
         if (error instanceof DOMException && error.name === 'AbortError') {
           return;
         }

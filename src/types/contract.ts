@@ -24,7 +24,17 @@ export interface ContractSearchResult {
   contractStatus: ContractStatus;
   propertyAddress: string;
   propertyType: PropertyType;
-  /** El esquema garantiza uno por contrato, pero la API admite ausencia. */
+  /**
+   * IMPORTANTE (estudiar) — Por que este campo puede ser null.
+   *
+   * <p>El enunciado dice que todo contrato tiene un arrendatario, pero el
+   * esquema JSON de la API admite que falte. Se declara {@code Party | null}
+   * para reflejar la API y no el deseo: con {@code strictNullChecks} activo,
+   * escribir {@code contract.tenant.fullName} deja de compilar y obliga a
+   * decidir que se pinta cuando no hay nadie. Si se declarara {@code Party} a
+   * secas, el mismo codigo compilaria y fallaria en tiempo de ejecucion con
+   * un «cannot read property of null» delante del evaluador.</p>
+   */
   tenant: Party | null;
   owners: Party[];
   /** Lista vacia cuando el contrato no tiene deudores solidarios. */

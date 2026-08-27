@@ -46,11 +46,17 @@ interface SuggestionsFor {
  * rompe, el panel se cierra sin decir nada y el error, si persiste, lo cuenta
  * la busqueda de verdad al pulsar Buscar.</p>
  *
- * <p>Se guarda el texto que pidio cada respuesta junto a la respuesta misma.
- * Sirve para decidir <em>durante el render</em> si lo que hay en memoria vale
- * para lo que hay escrito ahora: sin esa comprobacion, al escribir una letra
- * mas el panel ensennaria durante un instante las coincidencias de la palabra
- * anterior.</p>
+ * <p>IMPORTANTE (estudiar) — Se guarda el texto que pidio cada respuesta
+ * junto a la respuesta misma. Sirve para decidir <em>durante el render</em>
+ * si lo que hay en memoria vale para lo que hay escrito ahora: sin esa
+ * comprobacion, al escribir una letra mas el panel ensennaria durante un
+ * instante las coincidencias de la palabra anterior.</p>
+ *
+ * <p>Es la alternativa a reaccionar con un efecto que vacie la lista cada vez
+ * que cambia el texto. Un efecto asi provoca un render de mas y, sobre todo,
+ * describe el estado en dos sitios: lo que hay guardado y lo que el efecto
+ * hara con ello. Derivarlo en el render deja una sola verdad —«esta respuesta
+ * es de este texto»— y ningun momento intermedio en que ambas discrepen.</p>
  */
 export function useContractSuggestions(
   query: string,

@@ -18,8 +18,16 @@ interface SearchFeedbackProps {
  * explica por donde se puede buscar, y repetirlo aqui seria pedirle a la
  * persona que lea dos veces lo mismo antes de escribir.</p>
  *
- * <p>{@code aria-live="polite"} hace que un lector de pantalla anuncie el
- * cambio de estado sin interrumpir lo que este leyendo.</p>
+ * <p>IMPORTANTE (estudiar) — {@code aria-live="polite"} hace que el lector de
+ * pantalla anuncie este bloque cuando su contenido cambia, aunque el foco este
+ * en otro sitio. Sin el, quien busca a oidas pulsa Buscar y no recibe ninguna
+ * senal: la tabla aparece en pantalla, pero nada se lo dice.</p>
+ *
+ * <p>El valor {@code polite} espera a que termine de leerse lo que estuviera
+ * en curso, frente a {@code assertive}, que interrumpe. Para un recuento de
+ * resultados, interrumpir seria desproporcionado. El mensaje de error si lleva
+ * ademas {@code role="alert"}, que si es asertivo: un fallo no puede esperar
+ * su turno.</p>
  */
 export function SearchFeedback({
   status,

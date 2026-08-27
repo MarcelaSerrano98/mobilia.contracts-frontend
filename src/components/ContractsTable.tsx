@@ -8,9 +8,17 @@ interface ContractsTableProps {
 /**
  * Tabla de resultados con las columnas que exige el enunciado.
  *
- * <p>Se usa una tabla HTML real y no una rejilla de {@code <div>}: los datos son
- * tabulares, y el marcado semantico permite que un lector de pantalla anuncie a
- * que columna pertenece cada celda.</p>
+ * <p>IMPORTANTE (estudiar) — Se usa una tabla HTML real y no una rejilla de
+ * {@code <div>}. Con CSS Grid se consigue el mismo dibujo, pero se pierde lo
+ * que no se ve: {@code <th scope="col">} hace que un lector de pantalla, al
+ * llegar a una celda cualquiera, anuncie antes a que columna pertenece. Sin
+ * eso, quien navega a oidas escucha «Juan Carlos Perez Gomez» sin saber si es
+ * el arrendatario o un deudor solidario, que es justo el dato que la pantalla
+ * existe para dar.</p>
+ *
+ * <p>El {@code <caption>} nombra la tabla entera y se oculta visualmente con
+ * la clase {@code sr-only}: sigue disponible para las tecnologias de asistencia
+ * sin ocupar espacio en pantalla.</p>
  *
  * <p>Las clases van en cada {@code <th>} y {@code <td>} en lugar de apoyarse en
  * selectores de elemento: mantiene toda la hoja de estilos en un unico nivel de
