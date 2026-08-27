@@ -9,6 +9,7 @@ Prueba técnica de desarrollo para **Mobilia Software**.
 |---|---|
 | **Repositorio back-end** | https://github.com/MarcelaSerrano98/mobilia.contracts-backend |
 | **Repositorio front-end** | https://github.com/MarcelaSerrano98/mobilia.contracts-frontend |
+| **Guía técnica** | [GUIA-TECNICA.md](GUIA-TECNICA.md) — cómo está construido y por qué |
 
 ---
 
@@ -122,6 +123,85 @@ kill $(lsof -t -iTCP:5173 -sTCP:LISTEN)
 Se lee de `.env`, que **no se versiona**; el repositorio incluye `.env.example`
 como plantilla. Vite sólo expone al navegador las variables con prefijo `VITE_`,
 lo que evita filtrar por accidente cualquier otra variable del entorno.
+
+---
+
+## Cómo probarlo
+
+La base de datos de ejemplo del back-end trae **7 contratos, 5 inmuebles y 10
+personas**. Está construida a propósito para que se pueda comprobar cada caso
+del enunciado; estas son las consultas que lo recorren entero.
+
+### El caso central: un inmueble con historial
+
+El enunciado pide que un inmueble tenga **un contrato activo como máximo y
+cero o más inactivos**. Hay un inmueble que cumple justo eso:
+
+| Consulta | Resultado |
+|---|---|
+| `Calle 45` | **3 contratos** del mismo inmueble: `CT-2024-001` activo, `CT-2020-007` y `CT-2022-014` inactivos |
+
+Es la consulta que mejor demuestra para qué sirve la pantalla: la columna
+**Estado** distingue de un vistazo el contrato vigente de los que ya
+terminaron.
+
+### Cada campo de búsqueda
+
+El servicio busca el texto en los seis campos que pide el enunciado. Una
+consulta por cada uno:
+
+| Campo | Consulta | Resultado | Qué comprueba |
+|---|---|---|---|
+| Nombre y apellidos | `gomez` | 4 contratos | Sin tilde encuentra «Gómez» |
+| Documento | `1020304050` | 2 contratos | La misma persona es **deudor solidario** en uno y **arrendatario** en otro |
+| Email | `maria.rodriguez@example.com` | 3 contratos | Los correos son `nombre.apellido@example.com` |
+| Dirección | `bogota` | 4 contratos | Dos inmuebles distintos en la misma ciudad |
+| Código | `CT-2023-118` | 1 contrato | El único con **dos deudores solidarios** |
+
+### Casos límite
+
+| Consulta | Qué debe pasar |
+|---|---|
+| `nunez` | Encuentra «Núñez»: la búsqueda ignora tildes **y la eñe** |
+| `angel` | Encuentra «Ángel», con la tilde en mayúscula inicial |
+| `CT-2024-002` | Contrato con **dos propietarios** en una sola celda |
+| `CT-2025-030` | Contrato **sin deudores solidarios**: la celda queda con un guion |
+| `quintanilla` | Ninguna coincidencia: el desplegable lo avisa antes de pulsar Buscar |
+| `a` | Un solo carácter: el aviso salta en el cliente, sin llegar a pedir nada |
+| `maria.rodriguez@example.com` | El desplegable dice `otro campo`: la API no devuelve el email, y la pantalla no se inventa la coincidencia |
+| `apartamento` | **Cero resultados**, y es lo correcto: el tipo de inmueble se muestra en la tabla pero no es un campo de búsqueda. El enunciado solo pide buscar en persona, dirección y código |
+| `local` | 1 contrato, pero **no por el tipo**: coincide con `Local 3` dentro de la dirección `Avenida 6N # 28-45 Local 3, Cali` |
+
+### Qué mirar en el desplegable
+
+Escribe **despacio** `martin` y no pulses Buscar. Aparecen dos líneas con la
+misma persona:
+
+```
+Laura Sofía Martínez Ríos          CT-2021-055  INACTIVO
+PROPIETARIO
+
+Laura Sofía Martínez Ríos          CT-2022-014  INACTIVO
+ARRENDATARIO
+```
+
+Es la misma persona en dos papeles distintos. Además, `martin` se escribió sin
+tilde y el subrayado cae sobre `Martín`, con ella. Al elegir una línea, el
+campo se completa con el nombre entero **y sus tildes**.
+
+Con `10987` se ve la otra mitad: el desplegable enseña el documento completo,
+a quién pertenece y en qué papel figura.
+
+### Si la tabla no carga
+
+Comprueba que el back-end responde:
+
+```bash
+curl "http://localhost:8080/api/v1/contracts/search?q=CT-&size=50"
+```
+
+Si responde y la pantalla no, casi siempre es CORS: el back-end autoriza el
+origen `http://localhost:5173` y solo ese. La consola del navegador lo dice.
 
 ---
 
