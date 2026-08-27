@@ -1,219 +1,460 @@
-/* ---------------------------------------------------------------- Layout */
+/*
+ * Estilos de la pantalla.
+ *
+ * Todos los selectores son de una sola clase, sin mezclar clase y elemento:
+ * asi la especificidad es plana y el orden del archivo es la unica regla que
+ * decide, lo que evita que dos bloques se cancelen entre si.
+ */
 
-.app {
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 2.5rem 1.25rem 4rem;
-}
+/* ------------------------------------------------------------- Cabecera */
 
-.app__header {
-  margin-bottom: 2rem;
-}
-
-.app__title {
-  font-size: 1.75rem;
-  font-weight: 650;
-  letter-spacing: -0.01em;
-}
-
-.app__subtitle {
-  margin-top: 0.4rem;
-  color: var(--color-text-muted);
-  font-size: 0.95rem;
-}
-
-.app__main {
+.masthead {
   display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem clamp(1.25rem, 5vw, 3rem);
+  border-bottom: 1px solid var(--rule);
+}
+
+.masthead__wordmark {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.05rem;
+  letter-spacing: -0.035em;
+}
+
+.masthead__label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--ink-soft);
+}
+
+/*
+ * En pantallas estrechas el rotulo parte en dos lineas y descuadra la
+ * cabecera. Se retira: justo debajo, el titulo de la pagina ya dice a que ha
+ * llegado la persona.
+ */
+@media (max-width: 34rem) {
+  .masthead__label {
+    display: none;
+  }
+}
+
+/* --------------------------------------------------------------- Marco */
+
+.page {
+  min-height: 100vh;
+}
+
+.page__main {
+  max-width: 68rem;
+  margin: 0 auto;
+  padding: clamp(2rem, 5vw, 3.25rem) clamp(1.25rem, 5vw, 3rem) 5rem;
+}
+
+.page__title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(2.2rem, 6vw, 3.5rem);
+  line-height: 0.98;
+  letter-spacing: -0.04em;
+  max-width: 13ch;
+}
+
+.page__lead {
+  margin-top: 1.1rem;
+  max-width: 46ch;
+  font-size: 1.05rem;
+  color: var(--ink-soft);
 }
 
 /* ------------------------------------------------------------ Buscador */
 
-.search-bar {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 1.25rem;
+.finder {
+  margin-top: clamp(1.9rem, 4vw, 2.6rem);
 }
 
-.search-bar__label {
-  display: block;
-  font-size: 0.85rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-}
-
-.search-bar__row {
+/*
+ * El campo no es una caja con bordes redondeados sino una linea sobre la que
+ * se escribe, como el renglon de un formulario. La linea es tambien de donde
+ * cuelgan las pestannas de rotulos.
+ */
+.finder__row {
   display: flex;
-  gap: 0.625rem;
+  align-items: center;
+  gap: 1rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 2px solid var(--ink);
+  transition: border-color 160ms ease;
 }
 
-.search-bar__input {
+.finder__row:focus-within {
+  border-bottom-color: var(--seal);
+}
+
+.finder__input {
   flex: 1;
   min-width: 0;
-  padding: 0.7rem 0.875rem;
-  font-size: 0.95rem;
-  font-family: inherit;
-  color: inherit;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  padding: 0.35rem 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.15rem, 3vw, 1.6rem);
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
 }
 
-.search-bar__input:focus {
+.finder__input::placeholder {
+  color: var(--ink-faint);
+}
+
+/*
+ * El foco no dibuja un recuadro alrededor del campo: seria justo la caja que
+ * este disenno evita. Lo indica la propia linea, que pasa de 2 a 4 pixeles y
+ * se tinne de verdigris —un cambio de grosor y de color con contraste
+ * suficiente para valer como indicador de foco visible—. El relleno inferior
+ * se ajusta en la misma cantidad para que nada se mueva de sitio.
+ */
+.finder__input:focus {
   outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgb(47 91 215 / 15%);
 }
 
-.search-bar__button {
+.finder__row:has(:focus-visible) {
+  padding-bottom: 0.43rem;
+  border-bottom-width: 4px;
+  border-bottom-color: var(--seal);
+}
+
+/*
+ * La cruz de borrado nativa de los campos type="search" llega en azul de
+ * sistema y no hay forma de recolorearla. Se retira: el campo es una sola
+ * linea de texto y vaciarlo es un select-all.
+ */
+.finder__input::-webkit-search-cancel-button {
+  appearance: none;
+}
+
+.finder__submit {
+  flex: none;
   padding: 0.7rem 1.5rem;
-  font-size: 0.95rem;
-  font-family: inherit;
+  font-family: var(--font-mono);
   font-weight: 600;
-  color: #fff;
-  background: var(--color-primary);
-  border: none;
-  border-radius: 8px;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--paper-raised);
+  background: var(--seal);
+  border: 0;
+  border-radius: 2px;
   cursor: pointer;
   white-space: nowrap;
-  transition: background-color 0.15s;
+  transition: background-color 160ms ease;
 }
 
-.search-bar__button:hover:not(:disabled) {
-  background: var(--color-primary-dark);
+.finder__submit:hover:not(:disabled) {
+  background: var(--seal-deep);
 }
 
-.search-bar__button:disabled {
-  background: var(--color-neutral-text);
+.finder__submit:disabled {
+  color: var(--ink-faint);
+  background: var(--rule);
   cursor: not-allowed;
-  opacity: 0.55;
 }
 
-.search-bar__hint {
-  margin-top: 0.55rem;
+.finder__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+}
+
+.finder__hint {
+  padding-top: 0.55rem;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+}
+
+/* ------------------------------------------------ Panel de coincidencias */
+
+/*
+ * El panel cuelga de la linea del campo, en el sitio exacto donde la persona
+ * esta mirando mientras teclea, y flota sobre el resto: la tabla que haya
+ * debajo no se mueve de su sitio mientras se escribe.
+ */
+.finder__field {
+  position: relative;
+}
+
+.panel {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: 0;
+  z-index: 20;
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  border-top: 0;
+  border-radius: 0 0 3px 3px;
+}
+
+.panel__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 0.7rem 0.9rem;
+  cursor: pointer;
+  border-bottom: 1px solid var(--rule);
+}
+
+.panel__row:last-child {
+  border-bottom: 0;
+}
+
+/*
+ * La linea recorrida se marca con un fondo mas oscuro y una pleca lateral.
+ * La pleca va como sombra interior y no como borde para que la linea no se
+ * desplace un pixel al recorrer el panel con las flechas.
+ */
+.panel__row--on {
+  background: var(--paper);
+  box-shadow: inset 3px 0 0 var(--seal);
+}
+
+.panel__main {
+  min-width: 0;
+}
+
+.panel__value {
+  display: block;
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+
+/*
+ * El fragmento que coincide con lo que se ha escrito.
+ *
+ * Se subraya en lugar de resaltarse con un fondo: el fondo de la marca y el
+ * de la linea recorrida son dos verdes muy proximos, y sobre esa linea la
+ * coincidencia se volvia invisible justo cuando mas se esta mirando.
+ */
+.panel__hit {
+  padding: 0;
+  font-weight: 600;
+  color: var(--ink);
+  background: transparent;
+  box-shadow: inset 0 -0.12em 0 var(--seal);
+}
+
+/* Codigos y documentos: se cotejan caracter a caracter, van en mono. */
+.panel__value--data {
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  letter-spacing: 0.01em;
+}
+
+.panel__person {
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+
+.panel__field {
+  display: block;
+  margin-top: 0.2rem;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-soft);
+}
+
+.panel__aside {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.panel__code {
+  font-family: var(--font-mono);
   font-size: 0.8rem;
-  color: var(--color-text-muted);
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--ink-soft);
+}
+
+/*
+ * En pantallas estrechas el nombre parte en dos lineas y el codigo le disputa
+ * el ancho. Se apilan: el dato que ha coincidido ocupa la linea entera y el
+ * contrato al que pertenece baja debajo.
+ */
+@media (max-width: 34rem) {
+  .panel__row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.45rem;
+  }
+}
+
+.panel--empty {
+  padding: 0.85rem 0.9rem;
+  font-size: 0.92rem;
+  color: var(--ink-soft);
 }
 
 /* ------------------------------------------------------------- Mensajes */
 
-.feedback__message {
-  font-size: 0.9rem;
-  color: var(--color-text-muted);
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  background: var(--color-neutral-bg);
+.feedback {
+  margin-top: clamp(2.1rem, 5vw, 2.9rem);
 }
 
-.feedback__message--success {
-  background: var(--color-success-bg);
-  color: var(--color-success-text);
+/*
+ * El recuento es a la vez el rotulo de la tabla y la regla que la separa del
+ * buscador: la linea nace del texto y llega hasta el borde.
+ */
+.feedback__count {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.13em;
+  color: var(--ink-soft);
 }
 
-.feedback__message--error {
-  background: var(--color-error-bg);
-  color: var(--color-error-text);
+.feedback__count-text {
+  text-transform: uppercase;
+}
+
+.feedback__query {
+  text-transform: none;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+}
+
+.feedback__count::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--rule);
+}
+
+.feedback__empty {
+  max-width: 46ch;
+  color: var(--ink-soft);
+}
+
+.feedback__error {
+  max-width: 60ch;
+  padding: 0.85rem 1.1rem;
+  color: var(--stamp);
+  background: var(--stamp-tint);
+  border-left: 3px solid var(--stamp);
+  border-radius: 0 2px 2px 0;
 }
 
 /* --------------------------------------------------------------- Tabla */
 
-/* El contenedor desplaza la tabla en horizontal en pantallas estrechas,
-   en lugar de desbordar toda la pagina. */
-.table-wrapper {
+/* Desplaza la tabla en horizontal en pantallas estrechas, en lugar de
+   desbordar toda la pagina. */
+.ledger-wrap {
+  margin-top: 1.75rem;
   overflow-x: auto;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
 }
 
-.contracts-table {
+.ledger {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9rem;
+  font-size: 0.92rem;
 }
 
-/* Visible solo para lectores de pantalla: da contexto sin ocupar espacio. */
-.contracts-table__caption {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-}
-
-.contracts-table th {
+.ledger__head {
+  padding: 0 0.9rem 0.65rem;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 0.66rem;
   text-align: left;
-  font-weight: 600;
-  font-size: 0.78rem;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--color-text-muted);
-  background: #fafbfc;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--color-border);
+  letter-spacing: 0.13em;
+  color: var(--ink-soft);
   white-space: nowrap;
+  border-bottom: 1px solid var(--ink);
 }
 
-.contracts-table td {
-  padding: 0.875rem 1rem;
-  border-bottom: 1px solid var(--color-border);
+.ledger__cell {
+  padding: 0.95rem 0.9rem;
   vertical-align: top;
+  border-bottom: 1px solid var(--rule);
 }
 
-.contracts-table tbody tr:last-child td {
-  border-bottom: none;
+/* Las columnas de los extremos van a hueso con el resto de la pagina. */
+.ledger__head:first-child,
+.ledger__cell:first-child {
+  padding-left: 0;
 }
 
-.contracts-table tbody tr:hover {
-  background: #fafbfc;
+.ledger__head:last-child,
+.ledger__cell:last-child {
+  padding-right: 0;
 }
 
-.contracts-table__code {
-  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-  font-size: 0.85rem;
+.ledger__row:hover .ledger__cell {
+  background: var(--paper-raised);
+}
+
+.ledger__cell--code {
+  font-family: var(--font-mono);
+  font-size: 0.86rem;
+  font-weight: 500;
   white-space: nowrap;
 }
 
-.contracts-table__property-type {
+.ledger__property-type {
   display: block;
-  margin-top: 0.2rem;
-  font-size: 0.72rem;
-  letter-spacing: 0.04em;
-  color: var(--color-text-muted);
+  margin-top: 0.3rem;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-soft);
 }
 
-/* --------------------------------------------------------- Componentes */
+/* --------------------------------------------------------------- Sello */
 
-.badge {
+.stamp {
   display: inline-block;
-  padding: 0.2rem 0.55rem;
-  border-radius: 999px;
-  font-size: 0.72rem;
+  padding: 0.24rem 0.5rem;
+  font-family: var(--font-mono);
   font-weight: 600;
-  letter-spacing: 0.03em;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+  border: 1px solid currentcolor;
+  border-radius: 2px;
 }
 
-.badge--activo {
-  background: var(--color-success-bg);
-  color: var(--color-success-text);
+.stamp--activo {
+  color: var(--seal);
+  background: var(--seal-tint);
 }
 
-.badge--inactivo {
-  background: var(--color-neutral-bg);
-  color: var(--color-neutral-text);
+.stamp--inactivo {
+  color: var(--stamp);
+  background: var(--stamp-tint);
 }
+
+/* ------------------------------------------------------ Lista de partes */
 
 .party-list__item + .party-list__item {
-  margin-top: 0.3rem;
+  margin-top: 0.35rem;
 }
 
 .party-list__empty {
-  color: var(--color-text-muted);
+  color: var(--ink-faint);
 }

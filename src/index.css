@@ -1,29 +1,47 @@
-/* Variables de diseño y estilos base. */
+/*
+ * Sistema de disenno.
+ *
+ * La paleta sale del mundo del sujeto: papeleria de administracion de
+ * inmuebles. Un papel gris verdoso frio en lugar de blanco, tinta de petroleo
+ * en lugar de negro, y dos colores de sello —verdigris para lo vigente, oxido
+ * para lo historico— que son los unicos acentos que se permite la pantalla.
+ */
 :root {
-  --color-bg: #f5f6f8;
-  --color-surface: #ffffff;
-  --color-border: #e2e5ea;
-  --color-text: #1c2333;
-  --color-text-muted: #626b7f;
-  --color-primary: #2f5bd7;
-  --color-primary-dark: #24499f;
-  --color-success-bg: #e5f4ea;
-  --color-success-text: #1c6b38;
-  --color-neutral-bg: #eceef2;
-  --color-neutral-text: #5a6273;
-  --color-error-bg: #fdecec;
-  --color-error-text: #a52121;
+  /* Superficies */
+  --paper: #e6e9e5;
+  --paper-raised: #f2f4f0;
 
-  --radius: 10px;
-  --shadow: 0 1px 3px rgb(16 24 40 / 8%), 0 1px 2px rgb(16 24 40 / 6%);
+  /* Tinta */
+  --ink: #16232a;
+  --ink-soft: #4d5f63;
+  --ink-faint: #556768;
+  --rule: #c7cec6;
 
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial,
-    sans-serif;
-  line-height: 1.5;
-  color: var(--color-text);
-  background-color: var(--color-bg);
+  /* Sellos */
+  --seal: #2f6b5c;
+  --seal-deep: #245247;
+  --seal-tint: #d9e6e0;
+  --stamp: #9c3a2c;
+  --stamp-tint: #efdedb;
+
+  /*
+   * Tres roles tipograficos: una display con caracter para la cabecera y el
+   * campo de busqueda, una de texto sobria para la prosa, y una monoespaciada
+   * para todo lo que es dato —codigos, etiquetas, recuentos—. Que los datos
+   * vayan en mono no es decorativo: alinea las cifras y separa de un vistazo
+   * lo que la persona lee de lo que la persona coteja.
+   */
+  --font-display: 'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif;
+  --font-body: 'Public Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Spline Sans Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  font-family: var(--font-body);
+  line-height: 1.55;
+  color: var(--ink);
+  background-color: var(--paper);
 
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 *,
@@ -47,4 +65,32 @@ ul {
 ul {
   padding: 0;
   list-style: none;
+}
+
+/* Un foco visible y uniforme en toda la pantalla, no solo en los botones. */
+:focus-visible {
+  outline: 2px solid var(--seal);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* Solo para lectores de pantalla: da contexto sin ocupar espacio. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }
