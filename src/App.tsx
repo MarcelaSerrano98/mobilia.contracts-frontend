@@ -17,16 +17,19 @@ export default function App() {
   const contracts = results?.content ?? [];
 
   return (
-    <div className="app">
-      <header className="app__header">
-        <h1 className="app__title">Mobilia · Consulta de contratos</h1>
-        <p className="app__subtitle">
-          Busca por nombre, apellidos, documento de identidad, email, dirección
-          del inmueble o código del contrato.
-        </p>
+    <div className="page">
+      <header className="masthead">
+        <span className="masthead__wordmark">Mobilia</span>
+        <span className="masthead__label">Consulta de contratos</span>
       </header>
 
-      <main className="app__main">
+      <main className="page__main">
+        <h1 className="page__title">Historial de inmuebles</h1>
+        <p className="page__lead">
+          Consulta los contratos de un inmueble, el vigente y los anteriores,
+          junto con las personas que figuran en cada uno.
+        </p>
+
         <SearchBar onSearch={search} isSearching={status === 'loading'} />
 
         <SearchFeedback

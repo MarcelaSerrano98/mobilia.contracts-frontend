@@ -15,8 +15,16 @@ const API_BASE_URL: string =
   import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080';
 
 /**
- * Error de la API con el codigo de estado y el mensaje que devolvio el
- * back-end, para poder mostrarlo tal cual a la persona que busca.
+ * IMPORTANTE (estudiar) — Por que existe esta clase y no se usa Error.
+ *
+ * <p>El back-end devuelve mensajes utiles y en castellano («El texto de
+ * busqueda debe tener al menos 2 caracteres»). Envolverlos en un tipo propio
+ * que ademas lleva el {@code status} permite dos cosas: mostrar ese mensaje
+ * tal cual en pantalla, y distinguir mas adelante un fallo del servicio (500)
+ * de un error de la peticion (400) sin volver a leer el cuerpo.</p>
+ *
+ * <p>La alternativa —lanzar {@code Error} con un texto generico— convierte
+ * todos los fallos en el mismo, y obliga a la persona a adivinar.</p>
  */
 export class ApiError extends Error {
   readonly status: number;

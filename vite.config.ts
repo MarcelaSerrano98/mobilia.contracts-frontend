@@ -25,9 +25,15 @@ export default defineConfig({
     port: 5173,
 
     /**
-     * Con `strictPort` en true, Vite falla al arrancar si el puerto está
-     * ocupado en lugar de buscar el siguiente libre en silencio. Es preferible
-     * un error inmediato y explícito a una pantalla que no carga datos.
+     * IMPORTANTE (estudiar) — Con `strictPort` en true, Vite falla al arrancar
+     * si el puerto está ocupado, en lugar de buscar el siguiente libre en
+     * silencio.
+     *
+     * Es una decisión sobre dónde falla el error. Sin esta línea, un puerto
+     * ocupado hace que Vite arranque en el 5174, el navegador bloquee todas
+     * las peticiones por CORS y la pantalla aparezca vacía sin explicación: el
+     * síntoma se ve muy lejos de la causa. Con ella, el fallo ocurre en la
+     * terminal, en el primer segundo y diciendo exactamente qué pasa.
      */
     strictPort: true,
   },

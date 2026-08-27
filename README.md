@@ -9,12 +9,14 @@ Prueba técnica de desarrollo para **Mobilia Software**.
 |---|---|
 | **Repositorio back-end** | https://github.com/MarcelaSerrano98/mobilia.contracts-backend |
 | **Repositorio front-end** | https://github.com/MarcelaSerrano98/mobilia.contracts-frontend |
+| **Guía técnica** | [GUIA-TECNICA.md](GUIA-TECNICA.md) — cómo está construido y por qué |
 
 ---
 
 ## Qué hace
 
-Un campo de texto y un botón. Al buscar, consume
+Un campo de texto y un botón. Mientras se escribe, un desplegable adelanta las
+coincidencias y señala **en qué campo** está el texto; al buscar, consume
 `GET /api/v1/contracts/search` y pinta cada contrato encontrado con:
 
 | Columna | Origen |
@@ -36,6 +38,7 @@ Un campo de texto y un botón. Al buscar, consume
 | Build | Vite | Arranque casi instantáneo y configuración mínima |
 | Lenguaje | TypeScript | El contrato de la API queda tipado: si el back-end cambia un campo, lo avisa el compilador y no la pantalla en blanco |
 | Estilos | CSS plano con variables | Sin dependencias extra; el proyecto es pequeño y no justifica un framework de estilos |
+| Tipografía | Google Fonts por `<link>` | Tres familias sin añadir nada a `package.json`, y con pila de reserva si no hay red |
 | Peticiones | `fetch` nativo | No hace falta añadir Axios para una única petición GET |
 
 ---
@@ -65,6 +68,43 @@ npm run dev
 
 Abrir **http://localhost:5173**.
 
+### Si el puerto 5173 está ocupado
+
+Vite no arranca y muestra:
+
+```
+error when starting dev server:
+Error: Port 5173 is already in use
+```
+
+Es el comportamiento buscado: el puerto está fijado a propósito
+([por qué](#el-puerto-del-servidor-de-desarrollo-está-fijado)). La solución es
+**liberar el 5173**, no arrancar en otro: el back-end sólo autoriza el origen
+`http://localhost:5173` en su configuración de CORS, así que cambiar el puerto
+sustituiría este error por peticiones bloqueadas por el navegador.
+
+La causa habitual es un servidor de desarrollo anterior que sigue vivo — por
+ejemplo, si se cerró la terminal sin pararlo con `Ctrl+C`.
+
+```bash
+# 1. Ver qué proceso ocupa el puerto
+lsof -nP -iTCP:5173 -sTCP:LISTEN
+
+# 2. Comprobar de qué se trata antes de cerrarlo
+ps -p <PID> -o pid,etime,command
+
+# 3. Cerrarlo
+kill <PID>
+```
+
+Si el proceso no responde, `kill -9 <PID>` lo fuerza.
+
+Todo en un solo paso, cuando ya se sabe que es un Vite propio:
+
+```bash
+kill $(lsof -t -iTCP:5173 -sTCP:LISTEN)
+```
+
 ### Scripts disponibles
 
 | Comando | Qué hace |
@@ -86,6 +126,85 @@ lo que evita filtrar por accidente cualquier otra variable del entorno.
 
 ---
 
+## Cómo probarlo
+
+La base de datos de ejemplo del back-end trae **7 contratos, 5 inmuebles y 10
+personas**. Está construida a propósito para que se pueda comprobar cada caso
+del enunciado; estas son las consultas que lo recorren entero.
+
+### El caso central: un inmueble con historial
+
+El enunciado pide que un inmueble tenga **un contrato activo como máximo y
+cero o más inactivos**. Hay un inmueble que cumple justo eso:
+
+| Consulta | Resultado |
+|---|---|
+| `Calle 45` | **3 contratos** del mismo inmueble: `CT-2024-001` activo, `CT-2020-007` y `CT-2022-014` inactivos |
+
+Es la consulta que mejor demuestra para qué sirve la pantalla: la columna
+**Estado** distingue de un vistazo el contrato vigente de los que ya
+terminaron.
+
+### Cada campo de búsqueda
+
+El servicio busca el texto en los seis campos que pide el enunciado. Una
+consulta por cada uno:
+
+| Campo | Consulta | Resultado | Qué comprueba |
+|---|---|---|---|
+| Nombre y apellidos | `gomez` | 4 contratos | Sin tilde encuentra «Gómez» |
+| Documento | `1020304050` | 2 contratos | La misma persona es **deudor solidario** en uno y **arrendatario** en otro |
+| Email | `maria.rodriguez@example.com` | 3 contratos | Los correos son `nombre.apellido@example.com` |
+| Dirección | `bogota` | 4 contratos | Dos inmuebles distintos en la misma ciudad |
+| Código | `CT-2023-118` | 1 contrato | El único con **dos deudores solidarios** |
+
+### Casos límite
+
+| Consulta | Qué debe pasar |
+|---|---|
+| `nunez` | Encuentra «Núñez»: la búsqueda ignora tildes **y la eñe** |
+| `angel` | Encuentra «Ángel», con la tilde en mayúscula inicial |
+| `CT-2024-002` | Contrato con **dos propietarios** en una sola celda |
+| `CT-2025-030` | Contrato **sin deudores solidarios**: la celda queda con un guion |
+| `quintanilla` | Ninguna coincidencia: el desplegable lo avisa antes de pulsar Buscar |
+| `a` | Un solo carácter: el aviso salta en el cliente, sin llegar a pedir nada |
+| `maria.rodriguez@example.com` | El desplegable dice `otro campo`: la API no devuelve el email, y la pantalla no se inventa la coincidencia |
+| `apartamento` | **Cero resultados**, y es lo correcto: el tipo de inmueble se muestra en la tabla pero no es un campo de búsqueda. El enunciado solo pide buscar en persona, dirección y código |
+| `local` | 1 contrato, pero **no por el tipo**: coincide con `Local 3` dentro de la dirección `Avenida 6N # 28-45 Local 3, Cali` |
+
+### Qué mirar en el desplegable
+
+Escribe **despacio** `martin` y no pulses Buscar. Aparecen dos líneas con la
+misma persona:
+
+```
+Laura Sofía Martínez Ríos          CT-2021-055  INACTIVO
+PROPIETARIO
+
+Laura Sofía Martínez Ríos          CT-2022-014  INACTIVO
+ARRENDATARIO
+```
+
+Es la misma persona en dos papeles distintos. Además, `martin` se escribió sin
+tilde y el subrayado cae sobre `Martín`, con ella. Al elegir una línea, el
+campo se completa con el nombre entero **y sus tildes**.
+
+Con `10987` se ve la otra mitad: el desplegable enseña el documento completo,
+a quién pertenece y en qué papel figura.
+
+### Si la tabla no carga
+
+Comprueba que el back-end responde:
+
+```bash
+curl "http://localhost:8080/api/v1/contracts/search?q=CT-&size=50"
+```
+
+Si responde y la pantalla no, casi siempre es CORS: el back-end autoriza el
+origen `http://localhost:5173` y solo ese. La consola del navegador lo dice.
+
+---
+
 ## Estructura
 
 ```
@@ -97,18 +216,23 @@ src/
 ├── types/
 │   └── contract.ts              # Tipos que reflejan el contrato de la API
 ├── hooks/
-│   └── useContractSearch.ts     # Estados de la búsqueda y cancelación
+│   ├── useContractSearch.ts     # Estados de la búsqueda y cancelación
+│   └── useContractSuggestions.ts # Coincidencias mientras se escribe
+├── lib/
+│   └── matchField.ts            # Localiza el campo que contiene el texto
 ├── components/
-│   ├── SearchBar.tsx            # Campo de texto y botón
+│   ├── SearchBar.tsx            # Campo de texto, desplegable y botón
+│   ├── SearchSuggestions.tsx    # Panel de coincidencias
 │   ├── ContractsTable.tsx       # Tabla de resultados
 │   ├── PartyList.tsx            # Lista de personas dentro de una celda
 │   └── SearchFeedback.tsx       # Mensajes de estado
-├── index.css                    # Variables de diseño y estilos base
+├── index.css                    # Sistema de diseño y estilos base
 └── App.css                      # Estilos de los componentes
 ```
 
-La lógica de red vive en `api/`, la de estado en `hooks/` y la de presentación
-en `components/`. Ningún componente llama a `fetch` directamente.
+La lógica de red vive en `api/`, la de estado en `hooks/`, las funciones puras
+en `lib/` y la de presentación en `components/`. Ningún componente llama a
+`fetch` directamente.
 
 ---
 
@@ -142,6 +266,71 @@ Por eso se declara `port: 5173` junto con `strictPort: true`, que hace que Vite
 **falle al arrancar** si el puerto no está libre, en lugar de cambiarlo en
 silencio. Un error inmediato y explícito es preferible a una pantalla que no
 carga datos sin decir por qué.
+
+### El desplegable dice en qué campo está el texto
+
+El servicio busca contra seis campos a la vez —nombre, apellidos, documento,
+email, dirección y código— y devuelve los contratos que contienen el texto,
+pero no dice **por cuál** de ellos ha entrado cada uno. Con solo una tabla de
+resultados, quien busca «1098» ve dos contratos y no sabe si ese número es la
+cédula del arrendatario, la del propietario o parte de una dirección.
+
+Mientras se escribe, un desplegable cuelga del campo y adelanta hasta seis
+coincidencias. Cada línea enseña el dato concreto que contiene el texto, con
+el fragmento subrayado, y debajo el papel que juega: `DOCUMENTO ·
+PROPIETARIO · Laura Sofía Martínez Ríos`. Elegir una línea completa el campo
+con ese valor —con sus tildes, que probablemente no se escribieron— y lanza la
+búsqueda.
+
+La coincidencia se recalcula en el cliente (`lib/matchField.ts`) con las
+mismas reglas que el back-end: sin mayúsculas y sin tildes. Escribir `martin`
+resalta `Martín`, y para que el subrayado caiga sobre las letras correctas hay
+que conservar la correspondencia entre el texto normalizado y el original: la
+forma descompuesta de una vocal con tilde ocupa una posición más, y sin ese
+mapa el resaltado se desplazaría una letra.
+
+Cuando el back-end encuentra un contrato por el email —campo que la respuesta
+no incluye— la línea muestra la dirección del inmueble y el rótulo `otro
+campo`, en lugar de inventarse una coincidencia que no puede demostrar.
+
+### El desplegable no toca el estado de la búsqueda
+
+Las sugerencias viven en su propio hook, con su propia cancelación. Si una
+petición de sugerencias falla, el panel se cierra sin decir nada: la tabla que
+ya estaba en pantalla no se borra por un tropiezo de algo que solo era una
+ayuda mientras se teclea. El error, si persiste, lo cuenta la búsqueda de
+verdad al pulsar **Buscar**.
+
+Cada respuesta se guarda junto al texto que la pidió, y al pintar se comprueba
+que ese texto siga siendo el que hay escrito. Sin esa comprobación, al añadir
+una letra el panel enseñaría durante un instante las coincidencias de la
+palabra anterior.
+
+### La línea recorrida se guarda por contrato, no por posición
+
+El teclado mueve la selección con las flechas y la confirma con Intro, sin que
+el foco salga nunca de la caja de texto. Lo que se guarda no es el índice de
+la línea sino el código del contrato que ocupa: cuando llegan coincidencias
+nuevas, la marca sigue al contrato si continúa en la lista y desaparece sola
+si ya no está. Con un índice haría falta un efecto que lo reiniciara, y el
+número acabaría señalando una línea distinta de la que señalaba.
+
+### El foco no dibuja un recuadro
+
+El campo de búsqueda es un renglón, no una caja. Un contorno de foco
+rectangular alrededor le devolvería justo la caja que el diseño evita, así que
+el indicador es la propia línea: al recibir el foco de teclado pasa de dos a
+cuatro píxeles y se tiñe de verde. Es un cambio de grosor **y** de color, con
+contraste de 4,8:1 contra el fondo, que es lo que se le pide a un indicador de
+foco visible. El relleno inferior se reduce en la misma cantidad para que la
+línea engorde sin mover nada de sitio.
+
+### El texto buscado se muestra tal y como se escribió
+
+El recuento sobre la tabla va en versales —«2 CONTRATOS»— porque es un dato,
+no una frase. La consulta no: forzarle las mayúsculas a un apellido o a una
+dirección que la persona acaba de teclear los deforma y hace dudar de si la
+búsqueda entendió bien. Va en un `<span>` aparte que anula la transformación.
 
 ### Cancelación de peticiones (`AbortController`)
 
@@ -184,6 +373,13 @@ tecnologías de asistencia.
 
 ### Sin librería de peticiones ni de estado
 
-Una sola petición `GET` no justifica añadir Axios, y un estado que cabe en un
-hook no justifica Redux ni React Query. Cada dependencia es código que hay que
-mantener, actualizar y saber explicar.
+Dos peticiones `GET` contra el mismo endpoint no justifican añadir Axios:
+`fetch` ya trae la cancelación por `AbortSignal`, que es lo único que hacía
+falta. Un estado que cabe en dos hooks tampoco justifica Redux.
+
+React Query sí resolvería de fábrica lo que aquí se escribe a mano para el
+desplegable —la espera antes de preguntar, la cancelación y descartar
+respuestas que llegan tarde—, y en un proyecto que creciera sería la elección
+razonable. Son unas treinta líneas en `useContractSuggestions`, explicables
+una por una, frente a una dependencia más que mantener y actualizar; en una
+pantalla como ésta, la balanza cae del lado de escribirlas.
