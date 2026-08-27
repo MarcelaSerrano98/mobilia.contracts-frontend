@@ -65,6 +65,43 @@ npm run dev
 
 Abrir **http://localhost:5173**.
 
+### Si el puerto 5173 está ocupado
+
+Vite no arranca y muestra:
+
+```
+error when starting dev server:
+Error: Port 5173 is already in use
+```
+
+Es el comportamiento buscado: el puerto está fijado a propósito
+([por qué](#el-puerto-del-servidor-de-desarrollo-está-fijado)). La solución es
+**liberar el 5173**, no arrancar en otro: el back-end sólo autoriza el origen
+`http://localhost:5173` en su configuración de CORS, así que cambiar el puerto
+sustituiría este error por peticiones bloqueadas por el navegador.
+
+La causa habitual es un servidor de desarrollo anterior que sigue vivo — por
+ejemplo, si se cerró la terminal sin pararlo con `Ctrl+C`.
+
+```bash
+# 1. Ver qué proceso ocupa el puerto
+lsof -nP -iTCP:5173 -sTCP:LISTEN
+
+# 2. Comprobar de qué se trata antes de cerrarlo
+ps -p <PID> -o pid,etime,command
+
+# 3. Cerrarlo
+kill <PID>
+```
+
+Si el proceso no responde, `kill -9 <PID>` lo fuerza.
+
+Todo en un solo paso, cuando ya se sabe que es un Vite propio:
+
+```bash
+kill $(lsof -t -iTCP:5173 -sTCP:LISTEN)
+```
+
 ### Scripts disponibles
 
 | Comando | Qué hace |
