@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { searchContracts } from '../api/contractsApi';
+import { MIN_QUERY_LENGTH, searchContracts } from '../api/contractsApi';
 import { findMatch, type FieldMatch } from '../lib/matchField';
 import type { ContractSearchResult } from '../types/contract';
 
@@ -9,9 +9,6 @@ export interface Suggestion {
   /** Campo que contiene el texto, o null si la respuesta no lo incluye. */
   match: FieldMatch | null;
 }
-
-/** Longitud minima que exige el back-end. */
-const MIN_QUERY_LENGTH = 2;
 
 /** Cuantas lineas caben en el desplegable sin convertirlo en otra tabla. */
 const MAX_SUGGESTIONS = 6;

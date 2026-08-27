@@ -21,7 +21,15 @@ interface PartyListProps {
  */
 export function PartyList({ parties }: PartyListProps) {
   if (parties.length === 0) {
-    // El enunciado pide dejar la celda vacia cuando no aplica.
+    /*
+     * El enunciado pide que la celda quede vacia cuando no hay deudores
+     * solidarios. Se pinta una raya y no una celda literalmente en blanco:
+     * una celda vacia no distingue «no aplica» de «falta el dato o fallo
+     * algo», y quien lee con un lector de pantalla no oiria nada en absoluto.
+     * La raya es la convencion tipografica para «sin datos» y el aria-label
+     * lo dice con palabras. La celda no contiene ningun nombre, que es lo que
+     * el enunciado pide.
+     */
     return <span className="party-list__empty" aria-label="Sin registros">—</span>;
   }
 

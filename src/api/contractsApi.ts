@@ -36,6 +36,16 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Longitud minima que exige el servicio para el texto de busqueda.
+ *
+ * <p>Se declara aqui, junto al cliente HTTP, porque es una regla del back-end
+ * y no de la pantalla: si manana pasara a exigir tres caracteres, este es el
+ * unico sitio que habria que tocar. La interfaz la replica para avisar antes
+ * de gastar una peticion que ya se sabe que va a fallar con un 400.</p>
+ */
+export const MIN_QUERY_LENGTH = 2;
+
 interface SearchParams {
   query: string;
   page?: number;
