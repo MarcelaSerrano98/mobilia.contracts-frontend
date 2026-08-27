@@ -9,7 +9,6 @@ Prueba técnica de desarrollo para **Mobilia Software**.
 |---|---|
 | **Repositorio back-end** | https://github.com/MarcelaSerrano98/mobilia.contracts-backend |
 | **Repositorio front-end** | https://github.com/MarcelaSerrano98/mobilia.contracts-frontend |
-| **Guía técnica** | [GUIA-TECNICA.md](GUIA-TECNICA.md) — cómo está construido y por qué |
 
 ---
 
